@@ -1,7 +1,18 @@
 {
   "name": "agent-island",
   "version": "0.1.0",
-  "description": "Lightweight Dynamic Island monitor for Codex and Antigravity conversations",
+  "description": "Lightweight Windows Dynamic Island monitor for Codex and Antigravity conversations",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lvchao23333-commits/agent-island.git"
+  },
+  "keywords": [
+    "electron",
+    "dynamic-island",
+    "codex",
+    "antigravity",
+    "windows"
+  ],
   "main": "src/main.js",
   "scripts": {
     "start": "electron --no-warnings .",
