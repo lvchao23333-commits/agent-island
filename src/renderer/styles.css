@@ -202,6 +202,21 @@ body {
   color: #ffffff;
 }
 
+.icon-btn.is-spinning {
+  animation: spin 0.75s linear infinite;
+  color: #34d399;
+  pointer-events: none;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .panel-body {
   display: flex;
   flex-direction: column;
@@ -242,7 +257,29 @@ body {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.05);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.18s ease, transform 0.18s ease;
+}
+
+.conv-item.is-loading {
+  background: rgba(96, 165, 250, 0.12);
+  border-color: rgba(96, 165, 250, 0.35);
+  pointer-events: none;
+}
+
+.conv-item.is-removing {
+  opacity: 0;
+  transform: translateX(14px) scale(0.97);
+  pointer-events: none;
+}
+
+.mini-spinner {
+  width: 12px;
+  height: 12px;
+  border: 1.8px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #60a5fa;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
 }
 
 .conv-item:hover {

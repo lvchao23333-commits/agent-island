@@ -14,12 +14,8 @@ contextBridge.exposeInMainWorld('islandAPI', {
   resizeIsland: (width, height) => {
     ipcRenderer.send('resize-island', { width, height });
   },
-  requestRefresh: () => {
-    ipcRenderer.send('request-refresh');
-  },
-  openConversation: (payload) => {
-    ipcRenderer.send('open-conversation', payload);
-  },
+  requestRefresh: () => ipcRenderer.invoke('request-refresh'),
+  openConversation: (payload) => ipcRenderer.invoke('open-conversation', payload),
   dismissConversation: (id) => {
     ipcRenderer.send('dismiss-conversation', id);
   },

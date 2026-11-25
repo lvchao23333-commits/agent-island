@@ -220,14 +220,16 @@ app.whenReady().then(() => {
     positionTopCenter(w, h);
   });
 
-  ipcMain.on('request-refresh', () => {
-    runPoll();
+  ipcMain.handle('request-refresh', async () => {
+    await runPoll();
+    return true;
   });
 
-  ipcMain.on('open-conversation', (_event, payload) => {
+  ipcMain.handle('open-conversation', async (_event, payload) => {
     if (payload) {
-      openConversation(payload);
+      await openConversation(payload);
     }
+    return true;
   });
 
   ipcMain.on('dismiss-conversation', (_event, id) => {

@@ -166,44 +166,68 @@ pillView.addEventListener('click', () => {
   setMode('panel');
 });
 
-toastView.addEventListener('click', (e) => {
+toastView.addEventListener('click', async (e) => {
   if (e.target === toastClose) return;
   if (toastTimer) clearTimeout(toastTimer);
   if (activeToastEvent) {
-    window.islandAPI.openConversation({
-      source: activeToastEvent.source,
-      rawId: activeToastEvent.rawId,
-    });
-    if (activeToastEvent.id) {
-      window.islandAPI.dismissConversation(activeToastEvent.id);
-    }
+    const ev = activeToastEvent;
     activeToastEvent = null;
+    toastStatus.textContent = '正在跳转...';
+    await window.islandAPI.openConversation({
+      source: ev.source,
+      rawId: ev.rawId,
+    });
+    if (ev.id) {
+      window.islandAPI.dismissConversation(ev.id);
+    }
   }
   setMode('pill');
 });
 
-panelBody.addEventListener('click', (e) => {
+panelBody.addEventListener('click', async (e) => {
   const deleteBtn = e.target.closest('.conv-delete');
   if (deleteBtn) {
     e.stopPropagation();
     const itemEl = deleteBtn.closest('.conv-item');
     const id = itemEl?.dataset.id;
-    if (id) {
+    if (id && itemEl) {
+      itemEl.classList.add('is-removing');
       window.islandAPI.dismissConversation(id);
+      setTimeout(() => {
+        latestState.running = latestState.running.filter((i) => i.id !== id);
+        latestState.waiting = latestState.waiting.filter((i) => i.id !== id);
+        renderPill();
+        renderPanel();
+      }, 180);
     }
     return;
   }
 
   const itemEl = e.target.closest('.conv-item');
-  if (!itemEl) return;
+  if (!itemEl || itemEl.classList.contains('is-loading')) return;
   const id = itemEl.dataset.id;
   const status = itemEl.dataset.status;
   const source = itemEl.dataset.source;
   const rawId = itemEl.dataset.rawId;
   if (source && rawId) {
-    window.islandAPI.openConversation({ source, rawId });
-    if (status === 'waiting' && id) {
-      window.islandAPI.dismissConversation(id);
+    itemEl.classList.add('is-loading');
+    const jumpEl = itemEl.querySelector('.conv-jump');
+    if (jumpEl) {
+      jumpEl.outerHTML = '<span class="mini-spinner"></span>';
+    }
+    try {
+      await window.islandAPI.openConversation({ source, rawId });
+    } finally {
+      if (status === 'waiting' && id) {
+        itemEl.classList.add('is-removing');
+        window.islandAPI.dismissConversation(id);
+      } else {
+        itemEl.classList.remove('is-loading');
+        const spinner = itemEl.querySelector('.mini-spinner');
+        if (spinner) {
+          spinner.outerHTML = '<span class="conv-jump">↗</span>';
+        }
+      }
     }
   }
 });
@@ -218,8 +242,14 @@ btnCollapse.addEventListener('click', () => {
   setMode('pill');
 });
 
-btnRefresh.addEventListener('click', () => {
-  window.islandAPI.requestRefresh();
+btnRefresh.addEventListener('click', async () => {
+  if (btnRefresh.classList.contains('is-spinning')) return;
+  btnRefresh.classList.add('is-spinning');
+  try {
+    await window.islandAPI.requestRefresh();
+  } finally {
+    setTimeout(() => btnRefresh.classList.remove('is-spinning'), 250);
+  }
 });
 
 window.islandAPI.onStateUpdate((data) => {
