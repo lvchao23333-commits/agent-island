@@ -49,6 +49,7 @@ function positionTopCenter(width, height) {
   const winX = Math.round(x + (screenW - width) / 2);
   const winY = y + TOP_MARGIN_PX;
   mainWindow.setBounds({ x: winX, y: winY, width, height }, false);
+  mainWindow.setAlwaysOnTop(true, 'screen-saver');
 }
 
 function createWindow() {
@@ -78,6 +79,32 @@ function createWindow() {
   mainWindow.setAlwaysOnTop(true, 'screen-saver');
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   positionTopCenter(initW, initH);
+
+  mainWindow.on('minimize', () => {
+    if (settings.visible && mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.restore();
+      mainWindow.showInactive();
+      mainWindow.setAlwaysOnTop(true, 'screen-saver');
+    }
+  });
+
+  mainWindow.on('hide', () => {
+    // Recover if Windows (e.g. Win+D) hid the window while settings.visible is true
+    if (settings.visible && mainWindow && !mainWindow.isDestroyed()) {
+      setTimeout(() => {
+        if (settings.visible && mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
+          mainWindow.showInactive();
+          mainWindow.setAlwaysOnTop(true, 'screen-saver');
+        }
+      }, 150);
+    }
+  });
+
+  mainWindow.webContents.on('render-process-gone', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+    }
+  });
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 }
@@ -125,10 +152,10 @@ function createTray() {
   };
 
   tray.on('click', () => {
-    settings.visible = !settings.visible;
+    settings.visible = true;
     if (mainWindow && !mainWindow.isDestroyed()) {
-      if (settings.visible) mainWindow.showInactive();
-      else mainWindow.hide();
+      mainWindow.showInactive();
+      mainWindow.setAlwaysOnTop(true, 'screen-saver');
     }
     rebuildMenu();
   });
@@ -189,6 +216,12 @@ async function runPoll() {
   const snapshot = stateTracker.update(allItems);
 
   if (mainWindow && !mainWindow.isDestroyed()) {
+    if (settings.visible) {
+      if (!mainWindow.isVisible()) {
+        mainWindow.showInactive();
+      }
+      mainWindow.setAlwaysOnTop(true, 'screen-saver');
+    }
     mainWindow.webContents.send('state-update', {
       running: snapshot.running,
       waiting: snapshot.waiting,
@@ -214,6 +247,13 @@ app.whenReady().then(() => {
 
   createWindow();
   createTray();
+
+  screen.on('display-metrics-changed', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      const b = mainWindow.getBounds();
+      positionTopCenter(b.width, b.height);
+    }
+  });
 
   ipcMain.on('resize-island', (_event, { width, height }) => {
     const w = Math.max(220, Math.min(480, Math.round(width)));
