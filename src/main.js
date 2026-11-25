@@ -38,15 +38,8 @@ const agyMonitor = new AntigravityMonitor();
 const stateTracker = new StateTracker();
 
 function createTrayIcon() {
-  // 16x16 solid dark-blue/emerald dot PNG as data URL
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-    <rect x="2" y="7" width="28" height="18" rx="9" fill="#111827" stroke="#34d399" stroke-width="2.5"/>
-    <circle cx="11" cy="16" r="3.5" fill="#34d399"/>
-    <circle cx="21" cy="16" r="3.5" fill="#60a5fa"/>
-  </svg>`;
-  return nativeImage.createFromDataURL(
-    `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`
-  );
+  const iconPath = path.join(__dirname, '..', 'assets', 'tray.png');
+  return nativeImage.createFromPath(iconPath);
 }
 
 function positionTopCenter(width, height) {
@@ -65,6 +58,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: initW,
     height: initH,
+    icon: path.join(__dirname, '..', 'assets', 'icon.png'),
     frame: false,
     transparent: true,
     alwaysOnTop: true,
