@@ -228,6 +228,13 @@ app.whenReady().then(() => {
     }
   });
 
+  ipcMain.on('dismiss-conversation', (_event, id) => {
+    if (id) {
+      stateTracker.dismiss(id);
+      runPoll();
+    }
+  });
+
   mainWindow.webContents.once('did-finish-load', async () => {
     await runPoll();
     if (process.argv.includes('--smoke-test')) {

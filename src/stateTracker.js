@@ -6,7 +6,14 @@ class StateTracker {
     this.recentTtlMs = options.recentTtlMs ?? 60 * 1000;
     this.prevById = new Map();
     this.recentFinished = [];
+    this.dismissedIds = new Set();
     this.initialized = false;
+  }
+
+  dismiss(id) {
+    if (id) {
+      this.dismissedIds.add(id);
+    }
   }
 
   update(items, now = Date.now()) {
@@ -15,6 +22,10 @@ class StateTracker {
 
     for (const item of items) {
       currentById.set(item.id, item);
+      // Automatically un-dismiss if the conversation starts running again
+      if (item.status === 'running' && this.dismissedIds.has(item.id)) {
+        this.dismissedIds.delete(item.id);
+      }
       if (this.initialized) {
         const prev = this.prevById.get(item.id);
         if (prev && prev.status === 'running' && item.status !== 'running') {
@@ -40,11 +51,13 @@ class StateTracker {
     this.prevById = currentById;
     this.initialized = true;
 
-    const running = items
+    const visibleItems = items.filter((i) => !this.dismissedIds.has(i.id));
+
+    const running = visibleItems
       .filter((i) => i.status === 'running')
       .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 
-    const waiting = items
+    const waiting = visibleItems
       .filter((i) => i.status === 'waiting')
       .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 

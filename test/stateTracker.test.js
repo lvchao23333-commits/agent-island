@@ -61,3 +61,21 @@ test('CodexMonitor and AntigravityMonitor poll without throwing', async () => {
   assert.equal(typeof agyRes, 'object');
   assert.ok(Array.isArray(agyRes.items));
 });
+
+test('StateTracker dismisses thread and un-dismisses if it runs again', () => {
+  const tracker = new StateTracker();
+  tracker.update([
+    { id: 'codex:1', source: 'codex', title: 'Task A', status: 'waiting', detailStatus: 'completed', updatedAt: 1000 },
+  ], 2000);
+
+  tracker.dismiss('codex:1');
+  const afterDismiss = tracker.update([
+    { id: 'codex:1', source: 'codex', title: 'Task A', status: 'waiting', detailStatus: 'completed', updatedAt: 1000 },
+  ], 3000);
+  assert.equal(afterDismiss.waiting.length, 0);
+
+  const whenRunningAgain = tracker.update([
+    { id: 'codex:1', source: 'codex', title: 'Task A', status: 'running', detailStatus: 'inProgress', updatedAt: 4000 },
+  ], 5000);
+  assert.equal(whenRunningAgain.running.length, 1);
+});

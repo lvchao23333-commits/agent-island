@@ -89,7 +89,7 @@ function renderItem(item, isRunning) {
   const meta = rel ? `${statusText} · ${rel}` : statusText;
 
   return `
-    <div class="conv-item" data-source="${escapeHtml(item.source)}" data-raw-id="${escapeHtml(item.rawId || '')}" title="点击跳转到对话">
+    <div class="conv-item" data-id="${escapeHtml(item.id)}" data-source="${escapeHtml(item.source)}" data-raw-id="${escapeHtml(item.rawId || '')}" title="点击跳转到对话">
       <span class="status-dot ${isRunning ? 'running' : 'waiting'}"></span>
       <span class="source-badge ${item.source}">${sourceLabel}</span>
       <div class="conv-info">
@@ -97,6 +97,7 @@ function renderItem(item, isRunning) {
         <div class="conv-meta">${escapeHtml(meta)}</div>
       </div>
       <span class="conv-jump">↗</span>
+      <button class="conv-delete" type="button" title="从列表移除">✕</button>
     </div>
   `;
 }
@@ -179,6 +180,17 @@ toastView.addEventListener('click', (e) => {
 });
 
 panelBody.addEventListener('click', (e) => {
+  const deleteBtn = e.target.closest('.conv-delete');
+  if (deleteBtn) {
+    e.stopPropagation();
+    const itemEl = deleteBtn.closest('.conv-item');
+    const id = itemEl?.dataset.id;
+    if (id) {
+      window.islandAPI.dismissConversation(id);
+    }
+    return;
+  }
+
   const itemEl = e.target.closest('.conv-item');
   if (!itemEl) return;
   const source = itemEl.dataset.source;

@@ -20,4 +20,7 @@ contextBridge.exposeInMainWorld('islandAPI', {
   openConversation: (payload) => {
     ipcRenderer.send('open-conversation', payload);
   },
+  dismissConversation: (id) => {
+    ipcRenderer.send('dismiss-conversation', id);
+  },
 });

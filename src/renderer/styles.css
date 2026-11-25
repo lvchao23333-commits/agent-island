@@ -256,6 +256,27 @@ body {
   color: #e5e7eb;
 }
 
+.conv-delete {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.conv-delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
 .source-badge {
   font-size: 10.5px;
   font-weight: 600;
