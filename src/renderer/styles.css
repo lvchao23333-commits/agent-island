@@ -236,6 +236,24 @@ body {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.conv-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.conv-jump {
+  font-size: 11px;
+  color: #6b7280;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.conv-item:hover .conv-jump {
+  color: #e5e7eb;
 }
 
 .source-badge {

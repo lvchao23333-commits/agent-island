@@ -8,6 +8,7 @@ const {
   ipcMain,
   nativeImage,
   screen,
+  shell,
 } = require('electron');
 const { CodexMonitor } = require('./monitors/codexMonitor');
 const { AntigravityMonitor } = require('./monitors/antigravityMonitor');
@@ -134,6 +135,24 @@ function createTray() {
   rebuildMenu();
 }
 
+async function openConversation({ source, rawId }) {
+  if (!rawId) return;
+  const targetUrl =
+    source === 'codex'
+      ? `codex://threads/${encodeURIComponent(rawId)}`
+      : `antigravity://conversation/${encodeURIComponent(rawId)}`;
+  try {
+    await shell.openExternal(targetUrl);
+  } catch {
+    const fallbackUrl = source === 'codex' ? 'codex://' : 'antigravity://';
+    try {
+      await shell.openExternal(fallbackUrl);
+    } catch {
+      // Ignore if protocol handler unavailable
+    }
+  }
+}
+
 function sendSystemNotifications(finishedEvents) {
   if (!settings.notificationsEnabled || !Notification.isSupported()) return;
   for (const ev of finishedEvents) {
@@ -149,6 +168,9 @@ function sendSystemNotifications(finishedEvents) {
       title: `${sourceLabel} · ${statusLabel}`,
       body: ev.title,
       silent: false,
+    });
+    notification.on('click', () => {
+      openConversation({ source: ev.source, rawId: ev.rawId });
     });
     notification.show();
   }
@@ -198,6 +220,12 @@ app.whenReady().then(() => {
 
   ipcMain.on('request-refresh', () => {
     runPoll();
+  });
+
+  ipcMain.on('open-conversation', (_event, payload) => {
+    if (payload) {
+      openConversation(payload);
+    }
   });
 
   mainWindow.webContents.once('did-finish-load', async () => {

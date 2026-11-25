@@ -17,4 +17,7 @@ contextBridge.exposeInMainWorld('islandAPI', {
   requestRefresh: () => {
     ipcRenderer.send('request-refresh');
   },
+  openConversation: (payload) => {
+    ipcRenderer.send('open-conversation', payload);
+  },
 });

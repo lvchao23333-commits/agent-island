@@ -14,6 +14,7 @@ const btnRefresh = document.getElementById('btn-refresh');
 
 let currentMode = 'pill'; // 'pill' | 'toast' | 'panel'
 let toastTimer = null;
+let activeToastEvent = null;
 let latestState = {
   running: [],
   waiting: [],
@@ -88,13 +89,14 @@ function renderItem(item, isRunning) {
   const meta = rel ? `${statusText} · ${rel}` : statusText;
 
   return `
-    <div class="conv-item">
+    <div class="conv-item" data-source="${escapeHtml(item.source)}" data-raw-id="${escapeHtml(item.rawId || '')}" title="点击跳转到对话">
       <span class="status-dot ${isRunning ? 'running' : 'waiting'}"></span>
       <span class="source-badge ${item.source}">${sourceLabel}</span>
       <div class="conv-info">
-        <div class="conv-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
+        <div class="conv-title">${escapeHtml(item.title)}</div>
         <div class="conv-meta">${escapeHtml(meta)}</div>
       </div>
+      <span class="conv-jump">↗</span>
     </div>
   `;
 }
@@ -138,6 +140,7 @@ function renderPanel() {
 function showFinishToast(ev) {
   if (currentMode === 'panel') return;
   if (toastTimer) clearTimeout(toastTimer);
+  activeToastEvent = ev;
 
   toastBadge.textContent = ev.source === 'codex' ? 'Codex' : 'Antigravity';
   toastBadge.className = `source-badge ${ev.source}`;
@@ -152,6 +155,7 @@ function showFinishToast(ev) {
   setMode('toast');
   toastTimer = setTimeout(() => {
     if (currentMode === 'toast') {
+      activeToastEvent = null;
       setMode('pill');
     }
   }, 5000);
@@ -164,7 +168,24 @@ pillView.addEventListener('click', () => {
 toastView.addEventListener('click', (e) => {
   if (e.target === toastClose) return;
   if (toastTimer) clearTimeout(toastTimer);
-  setMode('panel');
+  if (activeToastEvent) {
+    window.islandAPI.openConversation({
+      source: activeToastEvent.source,
+      rawId: activeToastEvent.rawId,
+    });
+    activeToastEvent = null;
+  }
+  setMode('pill');
+});
+
+panelBody.addEventListener('click', (e) => {
+  const itemEl = e.target.closest('.conv-item');
+  if (!itemEl) return;
+  const source = itemEl.dataset.source;
+  const rawId = itemEl.dataset.rawId;
+  if (source && rawId) {
+    window.islandAPI.openConversation({ source, rawId });
+  }
 });
 
 toastClose.addEventListener('click', (e) => {

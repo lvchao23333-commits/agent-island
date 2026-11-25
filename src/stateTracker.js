@@ -20,6 +20,7 @@ class StateTracker {
         if (prev && prev.status === 'running' && item.status !== 'running') {
           const event = {
             id: item.id,
+            rawId: item.rawId,
             source: item.source,
             title: item.title,
             detailStatus: item.detailStatus,
