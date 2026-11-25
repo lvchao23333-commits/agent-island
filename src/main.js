@@ -29,7 +29,7 @@ let pollTimer = null;
 let cursorCheckTimer = null;
 
 const settings = {
-  notificationsEnabled: true,
+  notificationsEnabled: false,
   visible: true,
 };
 
