@@ -16,6 +16,13 @@ contextBridge.exposeInMainWorld('islandAPI', {
     ipcRenderer.on('cursor-outside', listener);
     return () => ipcRenderer.removeListener('cursor-outside', listener);
   },
+  onLanguageChange: (cb) => {
+    const listener = (_event, lang) => cb(lang);
+    ipcRenderer.on('language-change', listener);
+    return () => ipcRenderer.removeListener('language-change', listener);
+  },
+  getLanguage: () => ipcRenderer.invoke('get-language'),
+  setLanguage: (lang) => ipcRenderer.invoke('set-language', lang),
   resizeIsland: (width, height) => {
     ipcRenderer.send('resize-island', { width, height });
   },

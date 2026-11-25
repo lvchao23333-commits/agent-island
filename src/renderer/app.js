@@ -11,7 +11,64 @@ const panelView = document.getElementById('panel-view');
 const panelBody = document.getElementById('panel-body');
 const btnCollapse = document.getElementById('btn-collapse');
 const btnRefresh = document.getElementById('btn-refresh');
+const btnLang = document.getElementById('btn-lang');
 
+const I18N = {
+  'zh-CN': {
+    langToggleLabel: 'EN',
+    langToggleTitle: 'Switch to English',
+    refreshTitle: '刷新',
+    collapseTitle: '收起',
+    closeTitle: '关闭',
+    justNow: '刚刚',
+    secAgo: (n) => `${n}秒前`,
+    minAgo: (n) => `${n}分钟前`,
+    hourAgo: (n) => `${n}小时前`,
+    runningAndWaiting: (r, w) => `${r} 运行中 · ${w} 待回复`,
+    runningOnly: (r) => `${r} 个对话运行中`,
+    waitingOnly: (w) => `${w} 个对话等待回复`,
+    idlePill: '暂无活跃对话',
+    runningStatus: '正在运行...',
+    waitingStatus: '等待回复',
+    openTooltip: '点击跳转到对话',
+    dismissTooltip: '从列表移除',
+    runningSection: (n) => `正在运行 (${n})`,
+    waitingSection: (n) => `等待回复 (${n})`,
+    emptyPanel: 'Codex 与 Antigravity 当前均无活跃对话',
+    toastFailed: '运行失败',
+    toastInterrupted: '已中断',
+    toastDone: '运行完成 · 等待回复',
+    toastOpening: '正在跳转...',
+  },
+  en: {
+    langToggleLabel: '中',
+    langToggleTitle: '切换到中文',
+    refreshTitle: 'Refresh',
+    collapseTitle: 'Collapse',
+    closeTitle: 'Close',
+    justNow: 'just now',
+    secAgo: (n) => `${n}s ago`,
+    minAgo: (n) => `${n}m ago`,
+    hourAgo: (n) => `${n}h ago`,
+    runningAndWaiting: (r, w) => `${r} running · ${w} waiting`,
+    runningOnly: (r) => `${r} running`,
+    waitingOnly: (w) => `${w} waiting`,
+    idlePill: 'No active chats',
+    runningStatus: 'Running...',
+    waitingStatus: 'Waiting',
+    openTooltip: 'Click to open conversation',
+    dismissTooltip: 'Dismiss from list',
+    runningSection: (n) => `Running (${n})`,
+    waitingSection: (n) => `Waiting for reply (${n})`,
+    emptyPanel: 'No active Codex or Antigravity chats',
+    toastFailed: 'Failed',
+    toastInterrupted: 'Interrupted',
+    toastDone: 'Finished · Waiting for reply',
+    toastOpening: 'Opening...',
+  },
+};
+
+let currentLang = 'zh-CN';
 let currentMode = 'pill'; // 'pill' | 'toast' | 'panel'
 let toastTimer = null;
 let peekLeaveTimer = null;
@@ -24,15 +81,32 @@ let latestState = {
   recentFinished: [],
 };
 
+function t() {
+  return I18N[currentLang] || I18N['zh-CN'];
+}
+
+function applyLanguage(lang) {
+  currentLang = lang === 'en' ? 'en' : 'zh-CN';
+  const dict = t();
+  btnLang.textContent = dict.langToggleLabel;
+  btnLang.title = dict.langToggleTitle;
+  btnRefresh.title = dict.refreshTitle;
+  btnCollapse.title = dict.collapseTitle;
+  toastClose.title = dict.closeTitle;
+  renderPill();
+  renderPanel();
+}
+
 function formatRelativeTime(ms) {
   if (!ms) return '';
+  const dict = t();
   const diffSec = Math.max(0, Math.floor((Date.now() - ms) / 1000));
-  if (diffSec < 15) return '刚刚';
-  if (diffSec < 60) return `${diffSec}秒前`;
+  if (diffSec < 15) return dict.justNow;
+  if (diffSec < 60) return dict.secAgo(diffSec);
   const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}分钟前`;
+  if (diffMin < 60) return dict.minAgo(diffMin);
   const diffHour = Math.floor(diffMin / 60);
-  return `${diffHour}小时前`;
+  return dict.hourAgo(diffHour);
 }
 
 function escapeHtml(str) {
@@ -110,26 +184,28 @@ function renderPill() {
     pillDot.classList.add('idle');
   }
 
+  const dict = t();
   if (rCount > 0 && wCount > 0) {
-    pillText.textContent = `${rCount} 运行中 · ${wCount} 待回复`;
+    pillText.textContent = dict.runningAndWaiting(rCount, wCount);
   } else if (rCount > 0) {
-    pillText.textContent = `${rCount} 个对话运行中`;
+    pillText.textContent = dict.runningOnly(rCount);
   } else if (wCount > 0) {
-    pillText.textContent = `${wCount} 个对话等待回复`;
+    pillText.textContent = dict.waitingOnly(wCount);
   } else {
-    pillText.textContent = '暂无活跃对话';
+    pillText.textContent = dict.idlePill;
   }
   updatePeekState();
 }
 
 function renderItem(item, isRunning) {
+  const dict = t();
   const sourceLabel = item.source === 'codex' ? 'Codex' : 'Antigravity';
-  const statusText = isRunning ? '正在运行...' : '等待回复';
+  const statusText = isRunning ? dict.runningStatus : dict.waitingStatus;
   const rel = formatRelativeTime(item.updatedAt);
   const meta = rel ? `${statusText} · ${rel}` : statusText;
 
   return `
-    <div class="conv-item" data-id="${escapeHtml(item.id)}" data-status="${isRunning ? 'running' : 'waiting'}" data-source="${escapeHtml(item.source)}" data-raw-id="${escapeHtml(item.rawId || '')}" title="点击跳转到对话">
+    <div class="conv-item" data-id="${escapeHtml(item.id)}" data-status="${isRunning ? 'running' : 'waiting'}" data-source="${escapeHtml(item.source)}" data-raw-id="${escapeHtml(item.rawId || '')}" title="${escapeHtml(dict.openTooltip)}">
       <span class="status-dot ${isRunning ? 'running' : 'waiting'}"></span>
       <span class="source-badge ${item.source}">${sourceLabel}</span>
       <div class="conv-info">
@@ -137,19 +213,20 @@ function renderItem(item, isRunning) {
         <div class="conv-meta">${escapeHtml(meta)}</div>
       </div>
       <span class="conv-jump">↗</span>
-      <button class="conv-delete" type="button" title="从列表移除">✕</button>
+      <button class="conv-delete" type="button" title="${escapeHtml(dict.dismissTooltip)}">✕</button>
     </div>
   `;
 }
 
 function renderPanel() {
+  const dict = t();
   const { running, waiting } = latestState;
   const parts = [];
 
   if (running.length > 0) {
     parts.push(`
       <div>
-        <div class="section-title">正在运行 (${running.length})</div>
+        <div class="section-title">${escapeHtml(dict.runningSection(running.length))}</div>
         <div class="item-list">
           ${running.map((item) => renderItem(item, true)).join('')}
         </div>
@@ -160,7 +237,7 @@ function renderPanel() {
   if (waiting.length > 0) {
     parts.push(`
       <div>
-        <div class="section-title">等待回复 (${waiting.length})</div>
+        <div class="section-title">${escapeHtml(dict.waitingSection(waiting.length))}</div>
         <div class="item-list">
           ${waiting.slice(0, 12).map((item) => renderItem(item, false)).join('')}
         </div>
@@ -169,7 +246,7 @@ function renderPanel() {
   }
 
   if (parts.length === 0) {
-    parts.push('<div class="empty-state">Codex 与 Antigravity 当前均无活跃对话</div>');
+    parts.push(`<div class="empty-state">${escapeHtml(dict.emptyPanel)}</div>`);
   }
 
   panelBody.innerHTML = parts.join('');
@@ -183,15 +260,16 @@ function showFinishToast(ev) {
   if (currentMode === 'panel') return;
   if (toastTimer) clearTimeout(toastTimer);
   activeToastEvent = ev;
+  const dict = t();
 
   toastBadge.textContent = ev.source === 'codex' ? 'Codex' : 'Antigravity';
   toastBadge.className = `source-badge ${ev.source}`;
   toastStatus.textContent =
     ev.detailStatus === 'failed'
-      ? '运行失败'
+      ? dict.toastFailed
       : ev.detailStatus === 'interrupted'
-        ? '已中断'
-        : '运行完成 · 等待回复';
+        ? dict.toastInterrupted
+        : dict.toastDone;
   toastTitle.textContent = ev.title;
 
   setMode('toast');
@@ -239,7 +317,7 @@ toastView.addEventListener('click', async (e) => {
   if (activeToastEvent) {
     const ev = activeToastEvent;
     activeToastEvent = null;
-    toastStatus.textContent = '正在跳转...';
+    toastStatus.textContent = t().toastOpening;
     await window.islandAPI.openConversation({
       source: ev.source,
       rawId: ev.rawId,
@@ -309,6 +387,12 @@ btnCollapse.addEventListener('click', () => {
   setMode('pill');
 });
 
+btnLang.addEventListener('click', async () => {
+  const next = currentLang === 'zh-CN' ? 'en' : 'zh-CN';
+  const saved = await window.islandAPI.setLanguage(next);
+  applyLanguage(saved);
+});
+
 btnRefresh.addEventListener('click', async () => {
   if (btnRefresh.classList.contains('is-spinning')) return;
   btnRefresh.classList.add('is-spinning');
@@ -337,3 +421,9 @@ window.islandAPI.onCursorOutside(() => {
     updatePeekState();
   }
 });
+
+window.islandAPI.onLanguageChange((lang) => {
+  applyLanguage(lang);
+});
+
+window.islandAPI.getLanguage().then(applyLanguage);

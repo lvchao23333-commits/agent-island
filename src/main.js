@@ -4,6 +4,7 @@ process.on('warning', (w) => {
   console.warn(w);
 });
 
+const fs = require('node:fs');
 const path = require('node:path');
 const {
   app,
@@ -25,13 +26,60 @@ const TOP_MARGIN_PX = 0;
 
 let mainWindow = null;
 let tray = null;
+let rebuildTrayMenu = null;
 let pollTimer = null;
 let cursorCheckTimer = null;
 
 const settings = {
   notificationsEnabled: false,
   visible: true,
+  language: 'zh-CN',
 };
+
+function getSettingsPath() {
+  return path.join(app.getPath('userData'), 'settings.json');
+}
+
+function loadSettings() {
+  try {
+    const raw = fs.readFileSync(getSettingsPath(), 'utf8');
+    const parsed = JSON.parse(raw);
+    if (parsed.language === 'en' || parsed.language === 'zh-CN') {
+      settings.language = parsed.language;
+    }
+    if (typeof parsed.notificationsEnabled === 'boolean') {
+      settings.notificationsEnabled = parsed.notificationsEnabled;
+    }
+  } catch {
+    // First run or missing settings file
+  }
+}
+
+function saveSettings() {
+  try {
+    fs.writeFileSync(
+      getSettingsPath(),
+      JSON.stringify({
+        language: settings.language,
+        notificationsEnabled: settings.notificationsEnabled,
+      }),
+      'utf8'
+    );
+  } catch {
+    // Ignore write failure
+  }
+}
+
+function setLanguage(lang) {
+  if (lang !== 'zh-CN' && lang !== 'en') return settings.language;
+  settings.language = lang;
+  saveSettings();
+  if (rebuildTrayMenu) rebuildTrayMenu();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('language-change', lang);
+  }
+  return settings.language;
+}
 
 const codexMonitor = new CodexMonitor();
 const agyMonitor = new AntigravityMonitor();
@@ -114,9 +162,12 @@ function createTray() {
   tray.setToolTip('Agent Island - Codex & Antigravity Monitor');
 
   const rebuildMenu = () => {
+    const isEn = settings.language === 'en';
     const contextMenu = Menu.buildFromTemplate([
       {
-        label: settings.visible ? '隐藏灵动岛' : '显示灵动岛',
+        label: settings.visible
+          ? isEn ? 'Hide Island' : '隐藏灵动岛'
+          : isEn ? 'Show Island' : '显示灵动岛',
         click: () => {
           settings.visible = !settings.visible;
           if (mainWindow && !mainWindow.isDestroyed()) {
@@ -127,22 +178,40 @@ function createTray() {
         },
       },
       {
-        label: 'Windows 系统通知提醒',
+        label: isEn ? 'Windows Notifications' : 'Windows 系统通知提醒',
         type: 'checkbox',
         checked: settings.notificationsEnabled,
         click: (item) => {
           settings.notificationsEnabled = item.checked;
+          saveSettings();
         },
+      },
+      {
+        label: isEn ? 'Language / 语言' : '语言 / Language',
+        submenu: [
+          {
+            label: '中文',
+            type: 'radio',
+            checked: settings.language === 'zh-CN',
+            click: () => setLanguage('zh-CN'),
+          },
+          {
+            label: 'English',
+            type: 'radio',
+            checked: settings.language === 'en',
+            click: () => setLanguage('en'),
+          },
+        ],
       },
       { type: 'separator' },
       {
-        label: '立即刷新',
+        label: isEn ? 'Refresh Now' : '立即刷新',
         click: () => {
           runPoll();
         },
       },
       {
-        label: '退出',
+        label: isEn ? 'Quit' : '退出',
         click: () => {
           app.quit();
         },
@@ -150,6 +219,7 @@ function createTray() {
     ]);
     tray.setContextMenu(contextMenu);
   };
+  rebuildTrayMenu = rebuildMenu;
 
   tray.on('click', () => {
     settings.visible = true;
@@ -183,14 +253,15 @@ async function openConversation({ source, rawId }) {
 
 function sendSystemNotifications(finishedEvents) {
   if (!settings.notificationsEnabled || !Notification.isSupported()) return;
+  const isEn = settings.language === 'en';
   for (const ev of finishedEvents) {
     const sourceLabel = ev.source === 'codex' ? 'Codex' : 'Antigravity';
     const statusLabel =
       ev.detailStatus === 'failed'
-        ? '运行失败'
+        ? isEn ? 'Failed' : '运行失败'
         : ev.detailStatus === 'interrupted'
-          ? '已中断'
-          : '已运行完成，等待你的回复';
+          ? isEn ? 'Interrupted' : '已中断'
+          : isEn ? 'Finished · Waiting for reply' : '已运行完成，等待你的回复';
 
     const notification = new Notification({
       title: `${sourceLabel} · ${statusLabel}`,
@@ -245,8 +316,12 @@ app.whenReady().then(() => {
     app.setAppUserModelId('com.agent.island');
   }
 
+  loadSettings();
   createWindow();
   createTray();
+
+  ipcMain.handle('get-language', () => settings.language);
+  ipcMain.handle('set-language', (_event, lang) => setLanguage(lang));
 
   screen.on('display-metrics-changed', () => {
     if (mainWindow && !mainWindow.isDestroyed()) {

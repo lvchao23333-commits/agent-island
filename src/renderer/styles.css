@@ -236,6 +236,16 @@ body.is-peeking {
   color: #ffffff;
 }
 
+.lang-btn {
+  width: auto;
+  min-width: 26px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
 .icon-btn.is-spinning {
   animation: spin 0.75s linear infinite;
   color: #34d399;
