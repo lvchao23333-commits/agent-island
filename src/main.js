@@ -1,3 +1,8 @@
+process.on('warning', (w) => {
+  if (w.name === 'ExperimentalWarning') return;
+  console.warn(w);
+});
+
 const path = require('node:path');
 const {
   app,
