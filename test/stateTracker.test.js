@@ -4,7 +4,7 @@ const { StateTracker } = require('../src/stateTracker');
 const { CodexMonitor } = require('../src/monitors/codexMonitor');
 const { AntigravityMonitor } = require('../src/monitors/antigravityMonitor');
 
-test('StateTracker does not fire alert on initial poll', () => {
+test('StateTracker ignores pre-existing idle threads on initial poll and does not fire alert', () => {
   const tracker = new StateTracker();
   const res = tracker.update(
     [
@@ -15,7 +15,17 @@ test('StateTracker does not fire alert on initial poll', () => {
   );
   assert.equal(res.newlyFinished.length, 0);
   assert.equal(res.running.length, 1);
-  assert.equal(res.waiting.length, 1);
+  assert.equal(res.waiting.length, 0);
+
+  // If the pre-existing idle thread starts running later, it appears again
+  const res2 = tracker.update(
+    [
+      { id: 'codex:1', source: 'codex', title: 'Task A', status: 'running', detailStatus: 'inProgress', updatedAt: 6000 },
+      { id: 'agy:2', source: 'antigravity', title: 'Task B', status: 'running', detailStatus: 'RUN_STATE_RUNNING', updatedAt: 2000 },
+    ],
+    6500
+  );
+  assert.equal(res2.running.length, 2);
 });
 
 test('StateTracker emits newlyFinished when running transitions to waiting', () => {

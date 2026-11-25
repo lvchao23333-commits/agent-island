@@ -22,6 +22,10 @@ class StateTracker {
 
     for (const item of items) {
       currentById.set(item.id, item);
+      // On first poll, ignore pre-existing non-running conversations
+      if (!this.initialized && item.status !== 'running') {
+        this.dismissedIds.add(item.id);
+      }
       // Automatically un-dismiss if the conversation starts running again
       if (item.status === 'running' && this.dismissedIds.has(item.id)) {
         this.dismissedIds.delete(item.id);
