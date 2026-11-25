@@ -14,6 +14,8 @@ const btnRefresh = document.getElementById('btn-refresh');
 
 let currentMode = 'pill'; // 'pill' | 'toast' | 'panel'
 let toastTimer = null;
+let peekLeaveTimer = null;
+let isPillHovered = false;
 let activeToastEvent = null;
 let latestState = {
   running: [],
@@ -39,12 +41,21 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;');
 }
 
+function updatePeekState() {
+  const isIdle =
+    latestState.running.length === 0 && latestState.waiting.length === 0;
+  const shouldPeek = currentMode === 'pill' && isIdle && !isPillHovered;
+  islandEl.classList.toggle('is-peek', shouldPeek);
+  document.body.classList.toggle('is-peeking', shouldPeek);
+}
+
 function setMode(mode) {
   currentMode = mode;
   islandEl.className = `island mode-${mode}`;
   pillView.classList.toggle('hidden', mode !== 'pill');
   toastView.classList.toggle('hidden', mode !== 'toast');
   panelView.classList.toggle('hidden', mode !== 'panel');
+  updatePeekState();
 
   if (mode === 'pill') {
     window.islandAPI.resizeIsland(260, 76);
@@ -80,6 +91,7 @@ function renderPill() {
   } else {
     pillText.textContent = '暂无活跃对话';
   }
+  updatePeekState();
 }
 
 function renderItem(item, isRunning) {
@@ -161,6 +173,23 @@ function showFinishToast(ev) {
     }
   }, 5000);
 }
+
+islandEl.addEventListener('mouseenter', () => {
+  if (peekLeaveTimer) {
+    clearTimeout(peekLeaveTimer);
+    peekLeaveTimer = null;
+  }
+  isPillHovered = true;
+  updatePeekState();
+});
+
+islandEl.addEventListener('mouseleave', () => {
+  if (peekLeaveTimer) clearTimeout(peekLeaveTimer);
+  peekLeaveTimer = setTimeout(() => {
+    isPillHovered = false;
+    updatePeekState();
+  }, 180);
+});
 
 pillView.addEventListener('click', () => {
   setMode('panel');

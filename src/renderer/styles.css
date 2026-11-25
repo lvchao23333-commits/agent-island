@@ -22,6 +22,11 @@ body {
   justify-content: center;
   align-items: flex-start;
   padding: 12px 24px 26px 24px;
+  transition: padding-top 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.is-peeking {
+  padding-top: 0;
 }
 
 .island {
@@ -41,6 +46,35 @@ body {
   cursor: pointer;
   display: flex;
   align-items: center;
+}
+
+.island.mode-pill.is-peek {
+  min-width: 96px;
+  width: 96px;
+  height: 11px;
+  padding: 0;
+  border-radius: 0 0 10px 10px;
+  border-top: none;
+  justify-content: center;
+  background: rgba(16, 19, 26, 0.85);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28);
+}
+
+.island.mode-pill.is-peek .pill-view {
+  justify-content: center;
+  gap: 0;
+}
+
+.island.mode-pill.is-peek .status-dot {
+  width: 28px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(156, 163, 175, 0.7);
+}
+
+.island.mode-pill.is-peek .pill-text,
+.island.mode-pill.is-peek .chevron {
+  display: none;
 }
 
 .island.mode-pill:hover {
