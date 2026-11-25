@@ -47,13 +47,13 @@ function setMode(mode) {
   panelView.classList.toggle('hidden', mode !== 'panel');
 
   if (mode === 'pill') {
-    window.islandAPI.resizeIsland(256, 44);
+    window.islandAPI.resizeIsland(260, 76);
   } else if (mode === 'toast') {
-    window.islandAPI.resizeIsland(360, 82);
+    window.islandAPI.resizeIsland(396, 118);
   } else if (mode === 'panel') {
     requestAnimationFrame(() => {
-      const h = Math.min(460, Math.max(120, islandEl.offsetHeight + 12));
-      window.islandAPI.resizeIsland(388, h);
+      const h = Math.min(500, Math.max(140, islandEl.offsetHeight + 42));
+      window.islandAPI.resizeIsland(424, h);
     });
   }
 }

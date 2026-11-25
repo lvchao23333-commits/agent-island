@@ -15,7 +15,7 @@ const { AntigravityMonitor } = require('./monitors/antigravityMonitor');
 const { StateTracker } = require('./stateTracker');
 
 const POLL_INTERVAL_MS = 1500;
-const TOP_MARGIN_PX = 8;
+const TOP_MARGIN_PX = 0;
 
 let mainWindow = null;
 let tray = null;
@@ -52,8 +52,8 @@ function positionTopCenter(width, height) {
 }
 
 function createWindow() {
-  const initW = 256;
-  const initH = 44;
+  const initW = 260;
+  const initH = 76;
 
   mainWindow = new BrowserWindow({
     width: initW,
@@ -213,8 +213,8 @@ app.whenReady().then(() => {
   createTray();
 
   ipcMain.on('resize-island', (_event, { width, height }) => {
-    const w = Math.max(180, Math.min(460, Math.round(width)));
-    const h = Math.max(38, Math.min(520, Math.round(height)));
+    const w = Math.max(220, Math.min(480, Math.round(width)));
+    const h = Math.max(64, Math.min(540, Math.round(height)));
     positionTopCenter(w, h);
   });
 
