@@ -1,3 +1,4 @@
+process.removeAllListeners('warning');
 process.on('warning', (w) => {
   if (w.name === 'ExperimentalWarning') return;
   console.warn(w);
