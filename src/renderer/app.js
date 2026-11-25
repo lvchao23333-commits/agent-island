@@ -44,6 +44,9 @@ function escapeHtml(str) {
 function updatePeekState() {
   const isIdle =
     latestState.running.length === 0 && latestState.waiting.length === 0;
+  if (!islandEl.matches(':hover')) {
+    isPillHovered = false;
+  }
   const shouldPeek = currentMode === 'pill' && isIdle && !isPillHovered;
   islandEl.classList.toggle('is-peek', shouldPeek);
   document.body.classList.toggle('is-peeking', shouldPeek);
@@ -183,13 +186,22 @@ islandEl.addEventListener('mouseenter', () => {
   updatePeekState();
 });
 
-islandEl.addEventListener('mouseleave', () => {
+function schedulePeekReset() {
   if (peekLeaveTimer) clearTimeout(peekLeaveTimer);
   peekLeaveTimer = setTimeout(() => {
     isPillHovered = false;
     updatePeekState();
   }, 180);
+}
+
+islandEl.addEventListener('mouseleave', schedulePeekReset);
+document.addEventListener('mouseleave', schedulePeekReset);
+window.addEventListener('blur', () => {
+  isPillHovered = false;
+  updatePeekState();
 });
+
+updatePeekState();
 
 pillView.addEventListener('click', () => {
   setMode('panel');
