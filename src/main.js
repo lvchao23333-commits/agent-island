@@ -257,11 +257,12 @@ app.whenReady().then(() => {
       if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) return;
       const cursor = screen.getCursorScreenPoint();
       const b = mainWindow.getBounds();
+      // Exclude transparent shadow margins so hovering nearby tabs doesn't keep it open
       const inside =
-        cursor.x >= b.x &&
-        cursor.x <= b.x + b.width &&
+        cursor.x >= b.x + 18 &&
+        cursor.x <= b.x + b.width - 18 &&
         cursor.y >= b.y &&
-        cursor.y <= b.y + b.height;
+        cursor.y <= b.y + b.height - 20;
       if (!inside) {
         mainWindow.webContents.send('cursor-outside');
       }

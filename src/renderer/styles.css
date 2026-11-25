@@ -34,7 +34,7 @@ body.is-peeking {
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.36);
   color: #f3f4f6;
-  transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: width 0.16s ease-out, height 0.16s ease-out, border-radius 0.16s ease-out, background 0.16s ease-out;
   overflow: hidden;
 }
 
