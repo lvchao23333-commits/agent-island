@@ -1,0 +1,13 @@
+{
+  "name": "agent-island",
+  "version": "0.1.0",
+  "description": "Lightweight Dynamic Island monitor for Codex and Antigravity conversations",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0"
+  }
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Island</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="island" class="island mode-pill">
+      <!-- Collapsed Pill View -->
+      <div id="pill-view" class="pill-view">
+        <span id="pill-dot" class="status-dot idle"></span>
+        <span id="pill-text" class="pill-text">待命中</span>
+        <span id="pill-chevron" class="chevron">▾</span>
+      </div>
+
+      <!-- Finish Alert Toast View -->
+      <div id="toast-view" class="toast-view hidden">
+        <div class="toast-header">
+          <span id="toast-badge" class="source-badge">Codex</span>
+          <span id="toast-status" class="toast-status">已完成</span>
+          <button id="toast-close" class="icon-btn" title="关闭">✕</button>
+        </div>
+        <div id="toast-title" class="toast-title">任务名称</div>
+      </div>
+
+      <!-- Expanded Panel View -->
+      <div id="panel-view" class="panel-view hidden">
+        <div class="panel-header">
+          <div class="panel-header-left">
+            <span class="status-dot active-mini"></span>
+            <span class="panel-title">Agent Island</span>
+          </div>
+          <div class="panel-header-actions">
+            <button id="btn-refresh" class="icon-btn" title="刷新">↻</button>
+            <button id="btn-collapse" class="icon-btn" title="收起">▴</button>
+          </div>
+        </div>
+        <div id="panel-body" class="panel-body"></div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
