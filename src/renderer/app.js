@@ -89,7 +89,7 @@ function renderItem(item, isRunning) {
   const meta = rel ? `${statusText} · ${rel}` : statusText;
 
   return `
-    <div class="conv-item" data-id="${escapeHtml(item.id)}" data-source="${escapeHtml(item.source)}" data-raw-id="${escapeHtml(item.rawId || '')}" title="点击跳转到对话">
+    <div class="conv-item" data-id="${escapeHtml(item.id)}" data-status="${isRunning ? 'running' : 'waiting'}" data-source="${escapeHtml(item.source)}" data-raw-id="${escapeHtml(item.rawId || '')}" title="点击跳转到对话">
       <span class="status-dot ${isRunning ? 'running' : 'waiting'}"></span>
       <span class="source-badge ${item.source}">${sourceLabel}</span>
       <div class="conv-info">
@@ -174,6 +174,9 @@ toastView.addEventListener('click', (e) => {
       source: activeToastEvent.source,
       rawId: activeToastEvent.rawId,
     });
+    if (activeToastEvent.id) {
+      window.islandAPI.dismissConversation(activeToastEvent.id);
+    }
     activeToastEvent = null;
   }
   setMode('pill');
@@ -193,10 +196,15 @@ panelBody.addEventListener('click', (e) => {
 
   const itemEl = e.target.closest('.conv-item');
   if (!itemEl) return;
+  const id = itemEl.dataset.id;
+  const status = itemEl.dataset.status;
   const source = itemEl.dataset.source;
   const rawId = itemEl.dataset.rawId;
   if (source && rawId) {
     window.islandAPI.openConversation({ source, rawId });
+    if (status === 'waiting' && id) {
+      window.islandAPI.dismissConversation(id);
+    }
   }
 });
 

@@ -171,6 +171,8 @@ function sendSystemNotifications(finishedEvents) {
     });
     notification.on('click', () => {
       openConversation({ source: ev.source, rawId: ev.rawId });
+      stateTracker.dismiss(ev.id);
+      runPoll();
     });
     notification.show();
   }
