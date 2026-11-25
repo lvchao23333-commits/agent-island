@@ -11,6 +11,11 @@ contextBridge.exposeInMainWorld('islandAPI', {
     ipcRenderer.on('task-finished', listener);
     return () => ipcRenderer.removeListener('task-finished', listener);
   },
+  onCursorOutside: (cb) => {
+    const listener = () => cb();
+    ipcRenderer.on('cursor-outside', listener);
+    return () => ipcRenderer.removeListener('cursor-outside', listener);
+  },
   resizeIsland: (width, height) => {
     ipcRenderer.send('resize-island', { width, height });
   },

@@ -304,3 +304,10 @@ window.islandAPI.onTaskFinished((events) => {
     showFinishToast(events[0]);
   }
 });
+
+window.islandAPI.onCursorOutside(() => {
+  if (isPillHovered) {
+    isPillHovered = false;
+    updatePeekState();
+  }
+});

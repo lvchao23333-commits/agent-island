@@ -20,6 +20,7 @@ const TOP_MARGIN_PX = 0;
 let mainWindow = null;
 let tray = null;
 let pollTimer = null;
+let cursorCheckTimer = null;
 
 const settings = {
   notificationsEnabled: true,
@@ -242,19 +243,35 @@ app.whenReady().then(() => {
   mainWindow.webContents.once('did-finish-load', async () => {
     await runPoll();
     if (process.argv.includes('--smoke-test')) {
-      const snap = stateTracker.update([]); // just read counts? No, let's log from runPoll
-      console.log('SMOKE_TEST_OK');
+      const uiInfo = await mainWindow.webContents.executeJavaScript(
+        `JSON.stringify({ cls: document.getElementById('island').className, bodyCls: document.body.className, rect: document.getElementById('island').getBoundingClientRect() })`
+      );
+      console.log('SMOKE_TEST_OK', uiInfo);
       setTimeout(() => app.exit(0), 500);
     }
   });
 
   if (!process.argv.includes('--smoke-test')) {
     pollTimer = setInterval(runPoll, POLL_INTERVAL_MS);
+    cursorCheckTimer = setInterval(() => {
+      if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) return;
+      const cursor = screen.getCursorScreenPoint();
+      const b = mainWindow.getBounds();
+      const inside =
+        cursor.x >= b.x &&
+        cursor.x <= b.x + b.width &&
+        cursor.y >= b.y &&
+        cursor.y <= b.y + b.height;
+      if (!inside) {
+        mainWindow.webContents.send('cursor-outside');
+      }
+    }, 200);
   }
 });
 
 app.on('before-quit', () => {
   if (pollTimer) clearInterval(pollTimer);
+  if (cursorCheckTimer) clearInterval(cursorCheckTimer);
 });
 
 app.on('window-all-closed', (e) => {
