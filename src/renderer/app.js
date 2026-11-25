@@ -15,6 +15,7 @@ const btnRefresh = document.getElementById('btn-refresh');
 let currentMode = 'pill'; // 'pill' | 'toast' | 'panel'
 let toastTimer = null;
 let peekLeaveTimer = null;
+let emptyPanelTimer = null;
 let isPillHovered = false;
 let activeToastEvent = null;
 let latestState = {
@@ -52,6 +53,29 @@ function updatePeekState() {
   document.body.classList.toggle('is-peeking', shouldPeek);
 }
 
+function scheduleEmptyPanelAutoClose() {
+  const isEmpty =
+    latestState.running.length === 0 && latestState.waiting.length === 0;
+  if (currentMode === 'panel' && isEmpty) {
+    if (!emptyPanelTimer) {
+      emptyPanelTimer = setTimeout(() => {
+        emptyPanelTimer = null;
+        if (
+          currentMode === 'panel' &&
+          latestState.running.length === 0 &&
+          latestState.waiting.length === 0
+        ) {
+          isPillHovered = false;
+          setMode('pill');
+        }
+      }, 2000);
+    }
+  } else if (emptyPanelTimer) {
+    clearTimeout(emptyPanelTimer);
+    emptyPanelTimer = null;
+  }
+}
+
 function setMode(mode) {
   currentMode = mode;
   islandEl.className = `island mode-${mode}`;
@@ -59,6 +83,7 @@ function setMode(mode) {
   toastView.classList.toggle('hidden', mode !== 'toast');
   panelView.classList.toggle('hidden', mode !== 'panel');
   updatePeekState();
+  scheduleEmptyPanelAutoClose();
 
   if (mode === 'pill') {
     window.islandAPI.resizeIsland(260, 76);
@@ -148,6 +173,7 @@ function renderPanel() {
   }
 
   panelBody.innerHTML = parts.join('');
+  scheduleEmptyPanelAutoClose();
   if (currentMode === 'panel') {
     setMode('panel');
   }
